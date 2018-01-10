@@ -1,0 +1,54 @@
+@startuml
+== Shipping ==
+Actor Licensee
+Actor USKPA
+Licensee -> USKPA : Requests certificate
+USKPA -> Licensee : Issues blank certificate to Licensee
+hnote over KPCertificate : Blank KP Certificate
+Licensee -> Licensee : Prepares shipment
+Licensee -> KPCertificate : Fill out physical certificate with shipment info
+hnote over KPCertificate : Partially filled out
+database AES
+Licensee -> AES : Enter KP certificate info
+AES -> Licensee : ITN
+Licensee -> KPCertificate : Populate ITN
+hnote over KPCertificate : Completed certificate
+database USKPADB
+Licensee -> USKPADB : Handkeys KP certificate form into DB
+hnote over KPCertificate : Physical certificate is included in shipment
+KPCertificate -> DestinationCountry : PackageShipped
+DestinationCountry -> DestinationCountry : has question about shipment
+Actor StateKPTeam
+DestinationCountry -> StateKPTeam : Emails question
+StateKPTeam -> USKPADB : Searches for certificate
+USKPADB -> StateKPTeam : Results
+StateKPTeam -> StateKPTeam : Extracts licensee contact info
+StateKPTeam -> Licensee : Emails licensee with destination countries question
+note over USKPA #FFAAAA: How are shipments deemed complete in the USKPADB?  Whow updates that record?
+== Corrections to KPCertificate ==
+Licensee -> USKPA : Change request form
+USKPA -> USKPADB : Manually changes data in USKPADB
+note over USKPA #FFAAAA : How do they know if a shipment is complete prior to making this edit?
+== Sending info to Census ==
+Actor Census
+Licensee -> Census : Emails scanned copy of KPCertificate
+Actor PuertoRico
+Census -> PuertoRico : Sorts certificates to be keyed by PuertoRico
+database CensusDB
+PuertoRico -> CensusDB : Keys KP Certificates
+Census -> CensusDB : Moves .pdfs for import and export into common folder so DB can access
+Note right Census #FFAAAA : Where does the import information come from?
+PuertoRico -> PuertoRico : ?? Generates KPC report of import/export
+Note right PuertoRico #FFAAAA: Report talks about dupes, voided, referrals, where is the source of this data?
+Note right PuertoRico #FFAAAA: Where does this KPC report go to?
+== Census Weekly Reconciliation ==
+AES -> Census : Weekly
+CensusDB -> Census : Weekly
+Census -> Census : Weekly diff between AES and Census DB
+== Census Annual Reconciliation ==
+USKPA -> Census : Annual
+CensusDB -> Census : Annual
+Census -> Census : Weekly diff between USKPA and Census DB
+Note over Census #FFAAAA : Why are weekly reports run against AES, and annual reports run against USKPADB?
+Census -> StateKPTeam : Asks for clarifications on discrepancies
+@enduml
